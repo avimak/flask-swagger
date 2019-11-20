@@ -1,7 +1,7 @@
 """
 What's the big idea?
 
-An endpoint that traverses all restful endpoints producing a swagger 2.0 schema
+An endpoint that traverses all restful endpoints producing a swagger 3.0 schema
 If a swagger yaml description is found in the docstrings for an endpoint
 we add the endpoint to swagger specification output
 
@@ -97,7 +97,7 @@ def _extract_definitions(alist, level=None):
                 schema_id = schema.get("id")
                 if schema_id is not None:
                     defs.append(schema)
-                    ref = {"$ref": "#/definitions/{}".format(schema_id)}
+                    ref = {"$ref": "#/components/schemas/{}".format(schema_id)}
 
                     # only add the reference as a schema if we are in a response or
                     # a parameter i.e. at the top level
@@ -142,23 +142,23 @@ def swagger(app, prefix=None, process_doc=_sanitize,
     template -- The spec to start with and update as flask-swagger finds paths.
     """
     output = {
-        "swagger": "2.0",
+        "openapi": "3.0.0",
         "info": {
             "version": "0.0.0",
             "title": "Cool product name",
         }
     }
     paths = defaultdict(dict)
-    definitions = defaultdict(dict)
+    components = defaultdict(dict)
     if template is not None:
         output.update(template)
         # check for template provided paths and definitions
         for k, v in output.get('paths', {}).items():
             paths[k] = v
-        for k, v in output.get('definitions', {}).items():
-            definitions[k] = v
+        for k, v in output.get('components', {}).items():
+            components[k] = v
     output["paths"] = paths
-    output["definitions"] = definitions
+    output["components"] = components
 
     ignore_verbs = {"HEAD", "OPTIONS"}
     # technically only responses is non-optional
@@ -183,7 +183,7 @@ def swagger(app, prefix=None, process_doc=_sanitize,
             summary, description, swag = _parse_docstring(method, process_doc,
                                                           from_file_keyword)
             if swag is not None:  # we only add endpoints with swagger data in the docstrings
-                defs = swag.get('definitions', [])
+                defs = swag.get('schemas', [])
                 defs = _extract_definitions(defs)
                 params = swag.get('parameters', [])
                 defs += _extract_definitions(params)
@@ -197,7 +197,7 @@ def swagger(app, prefix=None, process_doc=_sanitize,
                 for definition in defs:
                     def_id = definition.pop('id')
                     if def_id is not None:
-                        definitions[def_id].update(definition)
+                        components[def_id].update(definition)
                 operation = dict(
                     summary=summary,
                     description=description,
