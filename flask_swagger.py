@@ -187,6 +187,7 @@ def swagger(app, prefix=None, process_doc=_sanitize,
                 defs = _extract_definitions(defs)
                 params = swag.get('parameters', [])
                 defs += _extract_definitions(params)
+                requestBody = swag.get('requestBody', {})
                 responses = swag.get('responses', {})
                 responses = {
                     str(key): value
@@ -194,6 +195,8 @@ def swagger(app, prefix=None, process_doc=_sanitize,
                 }
                 if responses is not None:
                     defs = defs + _extract_definitions(responses.values())
+                if requestBody:
+                    defs = defs + _extract_definitions(requestBody['content'].values())
                 for definition in defs:
                     def_id = definition.pop('id')
                     if def_id is not None:
@@ -203,6 +206,8 @@ def swagger(app, prefix=None, process_doc=_sanitize,
                     description=description,
                     responses=responses
                 )
+                if requestBody:
+                    operation['requestBody'] = requestBody
                 # parameters - swagger ui dislikes empty parameter lists
                 if len(params) > 0:
                     operation['parameters'] = params
