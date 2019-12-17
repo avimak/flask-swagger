@@ -169,6 +169,8 @@ def swagger(app, prefix=None, process_doc=_sanitize,
         if prefix and rule.rule[:len(prefix)] != prefix:
             continue
         endpoint = app.view_functions[rule.endpoint]
+        if not getattr(endpoint, 'published', False):
+            continue
         methods = dict()
         for verb in rule.methods.difference(ignore_verbs):
             verb = verb.lower()
