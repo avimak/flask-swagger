@@ -122,7 +122,7 @@ def _extract_definitions(alist, level=None):
 
 
 def swagger(app, prefix=None, process_doc=_sanitize,
-            from_file_keyword=None, template=None):
+            from_file_keyword=None, template=None, only_published=True):
     """
     Call this from an @app.route method like this
     @app.route('/spec.json')
@@ -169,7 +169,7 @@ def swagger(app, prefix=None, process_doc=_sanitize,
         if prefix and rule.rule[:len(prefix)] != prefix:
             continue
         endpoint = app.view_functions[rule.endpoint]
-        if not getattr(endpoint, 'published', False):
+        if not getattr(endpoint, 'published', False) and only_published:
             continue
         methods = dict()
         for verb in rule.methods.difference(ignore_verbs):
